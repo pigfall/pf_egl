@@ -26,7 +26,7 @@ impl Egl14{
         })
     }
 
-    pub fn entry_init(&mut self)->Result<(),String>{
+    pub fn entry_once_init(&mut self)->Result<(),String>{
         let egl_ins = &self.instance;
         let display = egl_ins
             .get_display(egl::DEFAULT_DISPLAY)
@@ -99,7 +99,7 @@ impl Egl14{
         Ok(())
     }
     
-    pub fn alone_create_surface(&self,platform_window:*mut c_void)->Result<egl::Surface,String>{
+    pub fn entry_create_surface(&self,platform_window:*mut c_void)->Result<egl::Surface,String>{
         let egl_ctx_helper = self.ctx.as_ref().unwrap();
         let egl_ins = &self.instance;
         let surface = unsafe {
