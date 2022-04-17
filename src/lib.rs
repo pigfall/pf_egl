@@ -1,10 +1,8 @@
 pub use egl;
 pub use libloading;
 
-#[derive(Copy,Clone)]
-pub enum EglVersion{
-    Version_1_4,
-}
+use std::os::raw::c_void;
+
 
 pub struct Egl14 {
     instance: egl::Instance<egl::Dynamic<libloading::Library,egl::EGL1_4>>,
@@ -19,22 +17,17 @@ pub struct EglCtx{
 }
 
 impl Egl14{
-    pub fn entry_load(egl_version: EglVersion)->Result<Self,String>{
-        match egl_version{
-            EglVersion::Version_1_4=>{
-                return Ok(Self{
-                    instance:unsafe{
-                        egl::DynamicInstance::<egl::EGL1_4>::load_required().map_err(|e|format!("{:?}",e))?
-                    },
-                    ctx:None,
-                })
-            }
-
-        }
+    pub fn entry_load()->Result<Self,String>{
+        return Ok(Self{
+            instance:unsafe{
+                egl::DynamicInstance::<egl::EGL1_4>::load_required().map_err(|e|format!("{:?}",e))?
+            },
+            ctx:None,
+        })
     }
 
     pub fn entry_init(&mut self)->Result<(),String>{
-        let mut egl_ins = &self.instance;
+        let egl_ins = &self.instance;
         let display = egl_ins
             .get_display(egl::DEFAULT_DISPLAY)
             .ok_or_else(|| {
@@ -105,4 +98,39 @@ impl Egl14{
 
         Ok(())
     }
+    
+    pub fn alone_create_surface(&self,platform_window:*mut c_void)->Result<egl::Surface,String>{
+        let egl_ctx_helper = self.ctx.as_ref().unwrap();
+        let egl_ins = &self.instance;
+        let surface = unsafe {
+           egl_ins 
+                .create_window_surface(
+                    egl_ctx_helper.display,
+                    egl_ctx_helper.config,
+                    platform_window as egl::NativeWindowType,
+                    None,
+                )
+                .map_err(|e| {
+                    let err_msg = format!("❌ Failed to create window surface {:?}", e);
+                    err_msg
+                })?
+        };
+        println!("✅  Created window surface");
+        return Ok(surface);
+    }
+
+    pub fn attach_surface_to_ctx(&mut self,surface: egl::Surface)->Result<(),String>{
+        println!("⌛ Attach an EGL rendering context to EGL surfaces");
+        self.instance
+            .make_current(self.ctx.as_mut().unwrap().display, Some(surface), Some(surface), Some(self.ctx.as_mut().unwrap().raw_egl_ctx))
+            .map_err(|e| {
+                let err_msg =format!("❌ Failed to attach egl rendering context to egl surfaces {:?}",e);
+                err_msg
+            })?;
+        println!("✅ Attached an EGL rendering context to EGL surfaces");
+        self.ctx.as_mut().unwrap().surface = Some(surface);
+        return Ok(());
+    }
+
+
 }
