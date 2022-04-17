@@ -132,5 +132,11 @@ impl Egl14{
         return Ok(());
     }
 
-
+    pub fn destroy_cur_surface(&mut self)->Result<(),String>{
+        let surface = self.ctx.as_mut().unwrap().surface.unwrap();
+        let display = self.ctx.as_mut().unwrap().display;
+        self.ctx.as_mut().unwrap().surface = None;
+        self.instance.destroy_surface(display,surface).map_err(|e|format!("failed to destroy surface {:?}",e))?;
+        return Ok(());
+    }
 }
