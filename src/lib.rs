@@ -5,7 +5,7 @@ use std::os::raw::c_void;
 
 
 pub struct Egl14 {
-    instance: egl::Instance<egl::Dynamic<libloading::Library,egl::EGL1_4>>,
+    pub instance: egl::Instance<egl::Dynamic<libloading::Library,egl::EGL1_4>>,
     ctx: Option<EglCtx>,
 }
 
