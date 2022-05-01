@@ -6,17 +6,21 @@ use std::os::raw::c_void;
 
 pub struct Egl14 {
     pub instance: egl::Instance<egl::Dynamic<libloading::Library,egl::EGL1_4>>,
-    ctx: Option<EglCtx>,
+    pub ctx: Option<EglCtx>,
 }
 
 pub struct EglCtx{
             display: egl::Display,
             raw_egl_ctx: egl::Context,
             config: egl::Config,
-            surface: Option<egl::Surface>,
+            pub surface: Option<egl::Surface>,
 }
 
 impl Egl14{
+    pub fn swap_buffers(&self){
+        let ctx =self.ctx.as_ref().unwrap();
+        self.instance.swap_buffers(ctx.display,ctx.surface.unwrap());
+    }
     pub fn entry_load()->Result<Self,String>{
         return Ok(Self{
             instance:unsafe{
